@@ -1,15 +1,63 @@
 version: '3.1'
+
 services:
   stats-server:
+    build: ./stats-service/stats-server
+    image: stats_service_image
+    container_name: stats_service
+    depends_on:
+      - stats-database
     ports:
       - "9090:9090"
+    environment:
+      - STATS_PORT=9090
+      - STATS_DRIVER=org.postgresql.Driver
+      - STATS_DATASOURCE_URL=jdbc:postgresql://stats_db:5432/stats
+      - STATS_DB=stats
+      - STATS_DB_USER=admin
+      - STATS_DB_PASSWORD=ewmpass
 
-  stats-db:
+  stats-database:
     image: postgres:14-alpine
+    container_name: stats_db
+    volumes:
+      - stats-data:/var/lib/postgres
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=stats
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=ewmpass
 
   ewm-service:
+    build: ./main-service
+    image: ewm_service_image
+    container_name: ewm_service
+    depends_on:
+      - ewm-database
     ports:
       - "8080:8080"
+    environment:
+      - EWM_DRIVER=org.postgresql.Driver
+      - EWM_DATASOURCE_URL=jdbc:postgresql://ewm_db:5432/ewm
+      - EWM_DB=ewm
+      - EWM_DB_USER=admin
+      - EWM_DB_PASSWORD=ewmpass
+      - PORT=8080
+      - STAT_SERVER_URL=http://stats-server:9090
 
-  ewm-db:
+  ewm-database:
     image: postgres:14-alpine
+    container_name: ewm_db
+    volumes:
+      - ewm-data:/var/lib/postgres
+    ports:
+      - "5434:5434"
+    environment:
+      - POSTGRES_DB=ewm
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=ewmpass
+
+volumes:
+  stats-data:
+  ewm-data:
