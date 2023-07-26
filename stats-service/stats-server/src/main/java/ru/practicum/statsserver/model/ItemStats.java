@@ -20,16 +20,16 @@ public class ItemStats {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column
+    @Column(name = "app")
     private String app;
 
-    @Column
+    @Column(name = "uri")
     private String uri;
 
-    @Column
+    @Column(name = "ip")
     private String ip;
 
-    @Column
-    private LocalDateTime timestamp;
+    @Column(name = "request_date_time")
+    private LocalDateTime requestDateTime;
 
 }

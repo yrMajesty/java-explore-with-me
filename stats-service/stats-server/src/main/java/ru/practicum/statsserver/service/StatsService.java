@@ -25,7 +25,7 @@ public class StatsService {
     }
 
     public List<ViewStatsDto> getAllStats(LocalDateTime start, LocalDateTime end, List<String> uris, Boolean unique) {
-        checkEndIsAfterStart(start, end);
+        validateDates(start, end);
 
         if (unique) {
             return repository.findAllUnique(start, end, uris);
@@ -36,7 +36,7 @@ public class StatsService {
         return repository.findAllNotUnique(start, end, uris);
     }
 
-    private void checkEndIsAfterStart(LocalDateTime start, LocalDateTime end) {
+    private void validateDates(LocalDateTime start, LocalDateTime end) {
         if (!end.isAfter(start)) {
             throw new NoValidParameterRequest("Start datetime must be before end datetime!");
         }

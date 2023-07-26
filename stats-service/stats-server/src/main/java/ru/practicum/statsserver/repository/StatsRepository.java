@@ -11,14 +11,14 @@ import java.util.List;
 public interface StatsRepository extends JpaRepository<ItemStats, Long> {
     @Query("select new ru.practicum.ViewStatsDto(h.app, h.uri, count(h.ip)) " +
             "from ItemStats h " +
-            "where h.timestamp between ?1 and ?2 " +
+            "where h.request_date_time between ?1 and ?2 " +
             "group by h.app, h.uri " +
             "order by count(h.ip) desc")
     List<ViewStatsDto> findAllWithoutUris(LocalDateTime start, LocalDateTime end);
 
     @Query("select new ru.practicum.ViewStatsDto(h.app, h.uri, count(h.ip)) " +
             "from ItemStats h " +
-            "where h.timestamp between ?1 and ?2 " +
+            "where h.request_date_time between ?1 and ?2 " +
             "and h.uri in (?3) " +
             "group by h.app, h.uri " +
             "order by count(h.ip) desc")
@@ -26,7 +26,7 @@ public interface StatsRepository extends JpaRepository<ItemStats, Long> {
 
     @Query("select new ru.practicum.ViewStatsDto(h.app, h.uri, count(distinct h.ip)) " +
             "from ItemStats h " +
-            "where h.timestamp between ?1 and ?2 " +
+            "where h.request_date_time between ?1 and ?2 " +
             "and h.uri in (?3) " +
             "group by h.app, h.uri " +
             "order by count(distinct h.ip) desc")
