@@ -4,8 +4,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-import ru.practicum.HitDto;
-import ru.practicum.ViewStatsDto;
+import ru.practicum.statsdto.HitDto;
+import ru.practicum.statsdto.ViewStatsDto;
 
 import java.util.List;
 import java.util.Map;

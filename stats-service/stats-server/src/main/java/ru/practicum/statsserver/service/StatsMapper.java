@@ -1,7 +1,7 @@
 package ru.practicum.statsserver.service;
 
 import lombok.experimental.UtilityClass;
-import ru.practicum.HitDto;
+import ru.practicum.statsdto.HitDto;
 import ru.practicum.statsserver.model.ItemStats;
 
 import java.time.LocalDateTime;
