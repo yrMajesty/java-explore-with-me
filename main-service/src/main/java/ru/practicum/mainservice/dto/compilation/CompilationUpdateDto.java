@@ -10,7 +10,7 @@ import java.util.List;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class CompilationUpdateRequest {
+public class CompilationUpdateDto {
     private Long id;
 
     private List<Long> events;

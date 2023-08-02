@@ -1,4 +1,4 @@
-package ru.practicum.mainservice.model;
+package ru.practicum.mainservice.entity.enums;
 
 public enum StateAction {
     SEND_TO_REVIEW,

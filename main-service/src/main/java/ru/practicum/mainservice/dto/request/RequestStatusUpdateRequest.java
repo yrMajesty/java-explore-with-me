@@ -1,7 +1,7 @@
 package ru.practicum.mainservice.dto.request;
 
 import lombok.*;
-import ru.practicum.mainservice.model.RequestStatus;
+import ru.practicum.mainservice.entity.enums.RequestStatus;
 
 import java.util.Set;
 

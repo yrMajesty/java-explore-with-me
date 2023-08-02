@@ -9,8 +9,8 @@ import ru.practicum.mainservice.entity.User;
 import ru.practicum.mainservice.exception.EventParametersException;
 import ru.practicum.mainservice.exception.InvalidRequestException;
 import ru.practicum.mainservice.exception.NoFoundObjectException;
-import ru.practicum.mainservice.model.EventState;
-import ru.practicum.mainservice.model.RequestStatus;
+import ru.practicum.mainservice.entity.enums.EventState;
+import ru.practicum.mainservice.entity.enums.RequestStatus;
 import ru.practicum.mainservice.repository.RequestRepository;
 import ru.practicum.mainservice.service.mapper.RequestMapper;
 

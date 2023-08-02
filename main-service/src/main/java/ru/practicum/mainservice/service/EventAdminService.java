@@ -7,11 +7,12 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import ru.practicum.mainservice.dto.event.EventFullDto;
+import ru.practicum.mainservice.dto.event.EventSearchDto;
 import ru.practicum.mainservice.dto.event.EventUpdateDto;
 import ru.practicum.mainservice.entity.Event;
 import ru.practicum.mainservice.exception.EventParametersException;
 import ru.practicum.mainservice.exception.NoFoundObjectException;
-import ru.practicum.mainservice.model.EventState;
+import ru.practicum.mainservice.entity.enums.EventState;
 import ru.practicum.mainservice.repository.EventRepository;
 import ru.practicum.mainservice.service.mapper.EventMapper;
 import ru.practicum.mainservice.service.mapper.EventUpdateMapper;
@@ -29,14 +30,14 @@ public class EventAdminService {
     private final EventMapper eventMapper;
     private final EventUpdateMapper eventUpdateMapper;
 
-    public List<EventFullDto> getAllEvents(List<Long> users, List<String> states,
-                                           List<Long> categories, LocalDateTime startDate, LocalDateTime endDate,
-                                           Integer from, Integer size) {
-        DateTimeUtils.checkEndIsAfterStart(startDate, endDate);
+    public List<EventFullDto> getAllEvents(EventSearchDto request) {
+        DateTimeUtils.checkEndIsAfterStart(request.getRangeStart(), request.getRangeEnd());
 
-        Pageable pageable = PageRequest.of(from / size, size, Sort.by(Sort.Direction.ASC, "id"));
+        Pageable pageable = PageRequest.of(request.getFrom() / request.getSize(), request.getSize(),
+                Sort.by(Sort.Direction.ASC, "id"));
 
-        Specification<Event> specification = createRequestForGetEvents(users, states, categories, startDate, endDate);
+        Specification<Event> specification = createRequestForGetEvents(request.getUsers(), request.getStates(),
+                request.getCategories(), request.getRangeStart(), request.getRangeEnd());
 
         List<Event> events = eventRepository.findAll(specification, pageable);
         return eventMapper.toFullDtos(events);

@@ -2,7 +2,7 @@ package ru.practicum.mainservice.dto.request;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.*;
-import ru.practicum.mainservice.model.RequestStatus;
+import ru.practicum.mainservice.entity.enums.RequestStatus;
 import ru.practicum.mainservice.utils.DateTimeUtils;
 
 import java.time.LocalDateTime;

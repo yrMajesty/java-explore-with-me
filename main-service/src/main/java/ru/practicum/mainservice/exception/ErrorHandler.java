@@ -2,16 +2,12 @@ package ru.practicum.mainservice.exception;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.web.context.request.WebRequest;
-import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 import ru.practicum.mainservice.utils.DateTimeUtils;
 
 import java.time.LocalDateTime;
@@ -20,18 +16,12 @@ import java.util.Map;
 
 @Slf4j
 @RestControllerAdvice
-public class ErrorHandler extends ResponseEntityExceptionHandler {
+public class ErrorHandler {
 
-    @Override
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex,
-                                                                  HttpHeaders headers, HttpStatus status,
-                                                                  WebRequest request) {
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    protected ErrorResponse handleMethodArgumentNotValid(MethodArgumentNotValidException ex) {
         Map<String, Object> response = new LinkedHashMap<>();
-
-        response.put("timestamp", LocalDateTime.now().format(DateTimeUtils.DATE_TIME_FORMATTER));
-        response.put("status", HttpStatus.BAD_REQUEST.name());
-        response.put("reason", "");
 
         Map<String, Object> errors = new LinkedHashMap<>();
         ex.getBindingResult()
@@ -41,26 +31,26 @@ public class ErrorHandler extends ResponseEntityExceptionHandler {
 
         log.error("Error MethodArgumentNotValidException {}", ex.getMessage());
 
-        return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(response);
+        return ErrorResponse.builder()
+                .status(HttpStatus.BAD_REQUEST.name())
+                .errors(errors)
+                .reason("Required parameters is not valid in the request")
+                .message(ex.getMessage())
+                .timestamp(LocalDateTime.now().format(DateTimeUtils.DATE_TIME_FORMATTER))
+                .build();
     }
 
-    @Override
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    protected ResponseEntity<Object> handleMissingServletRequestParameter(MissingServletRequestParameterException ex,
-                                                                          HttpHeaders headers, HttpStatus status,
-                                                                          WebRequest request) {
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    protected ErrorResponse handleMissingServletRequestParameter(MissingServletRequestParameterException ex) {
         log.error("Error MissingServletRequestParameterException {}", ex.getMessage());
 
-        return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(ErrorResponse.builder()
-                        .status(HttpStatus.BAD_REQUEST.name())
-                        .reason("Required parameter is not specified in the request")
-                        .message(ex.getMessage())
-                        .timestamp(LocalDateTime.now())
-                        .build());
+        return ErrorResponse.builder()
+                .status(HttpStatus.BAD_REQUEST.name())
+                .reason("Required parameter is not specified in the request")
+                .message(ex.getMessage())
+                .timestamp(LocalDateTime.now().format(DateTimeUtils.DATE_TIME_FORMATTER))
+                .build();
     }
 
     @ResponseStatus(HttpStatus.NOT_FOUND)
@@ -72,83 +62,75 @@ public class ErrorHandler extends ResponseEntityExceptionHandler {
                 .status(HttpStatus.NOT_FOUND.name())
                 .reason("The object was not found.")
                 .message(e.getMessage())
-                .timestamp(LocalDateTime.now())
+                .timestamp(LocalDateTime.now().format(DateTimeUtils.DATE_TIME_FORMATTER))
                 .build();
     }
 
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     @ExceptionHandler(value = Exception.class)
-    public ResponseEntity<Object> handleException(Exception e) {
+    public ErrorResponse handleException(Exception e) {
         log.error("Error Exception {}", e.getMessage());
 
         e.printStackTrace();
 
-        ErrorResponse response = ErrorResponse.builder()
+        return ErrorResponse.builder()
                 .status(HttpStatus.INTERNAL_SERVER_ERROR.name())
                 .reason("Unexpected error")
                 .message(e.getMessage())
-                .timestamp(LocalDateTime.now())
+                .timestamp(LocalDateTime.now().format(DateTimeUtils.DATE_TIME_FORMATTER))
                 .build();
-
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
     }
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(value = InvalidRequestException.class)
-    public ResponseEntity<Object> handlerInvalidRequestException(InvalidRequestException e) {
+    public ErrorResponse handlerInvalidRequestException(InvalidRequestException e) {
         log.error("Error InvalidRequestException {}", e.getMessage());
 
-        ErrorResponse response = ErrorResponse.builder()
+        return ErrorResponse.builder()
                 .status(HttpStatus.BAD_REQUEST.name())
                 .reason("Request is incorrect.")
                 .message(e.getMessage())
-                .timestamp(LocalDateTime.now())
+                .timestamp(LocalDateTime.now().format(DateTimeUtils.DATE_TIME_FORMATTER))
                 .build();
-
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(value = DateTimeValidationException.class)
-    public ResponseEntity<Object> handlerDateTimeValidationException(DateTimeValidationException e) {
+    public ErrorResponse handlerDateTimeValidationException(DateTimeValidationException e) {
         log.error("Error DateTimeValidationException {}", e.getMessage());
 
-        ErrorResponse response = ErrorResponse.builder()
+        return ErrorResponse.builder()
                 .status(HttpStatus.BAD_REQUEST.name())
                 .reason("Date time of request is not valid")
                 .message(e.getMessage())
-                .timestamp(LocalDateTime.now())
+                .timestamp(LocalDateTime.now().format(DateTimeUtils.DATE_TIME_FORMATTER))
                 .build();
-
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 
     @ResponseStatus(HttpStatus.CONFLICT)
     @ExceptionHandler(value = EventParametersException.class)
-    public ResponseEntity<Object> handlerEventParametersException(EventParametersException e) {
+    public ErrorResponse handlerEventParametersException(EventParametersException e) {
         log.error("Error EventParametersException {}", e.getMessage());
 
-        ErrorResponse response = ErrorResponse.builder()
+        return ErrorResponse.builder()
                 .status(HttpStatus.CONFLICT.name())
                 .reason("Discrepancy between the parameters of the \"Event\" object")
                 .message(e.getMessage())
-                .timestamp(LocalDateTime.now())
+                .timestamp(LocalDateTime.now().format(DateTimeUtils.DATE_TIME_FORMATTER))
                 .build();
 
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
     }
 
     @ResponseStatus(HttpStatus.CONFLICT)
     @ExceptionHandler(DataIntegrityViolationException.class)
-    public ResponseEntity<Object> handleDataIntegrityViolationException(DataIntegrityViolationException e) {
+    public ErrorResponse handleDataIntegrityViolationException(DataIntegrityViolationException e) {
         log.error("Error DataIntegrityViolationException {}", e.getMessage());
-        ErrorResponse response = ErrorResponse.builder()
+
+        return ErrorResponse.builder()
                 .status(HttpStatus.CONFLICT.name())
                 .reason("Error of saving to the database")
                 .message(e.getMessage())
-                .timestamp(LocalDateTime.now())
+                .timestamp(LocalDateTime.now().format(DateTimeUtils.DATE_TIME_FORMATTER))
                 .build();
-
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
     }
 }

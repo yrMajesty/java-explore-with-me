@@ -21,7 +21,7 @@ EventMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "publishedOn", expression = "java(java.time.LocalDateTime.now())")
     @Mapping(target = "createdOn", expression = "java(java.time.LocalDateTime.now())")
-    @Mapping(target = "state", expression = "java(ru.practicum.mainservice.model.EventState.PENDING)")
+    @Mapping(target = "state", expression = "java(ru.practicum.mainservice.entity.enums.EventState.PENDING)")
     @Mapping(target = "confirmedRequests", constant = "0")
     Event fromDto(EventNewDto eventNewDto, Category category, User initiator);
 

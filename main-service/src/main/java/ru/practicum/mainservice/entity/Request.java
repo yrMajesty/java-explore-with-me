@@ -5,7 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import ru.practicum.mainservice.model.RequestStatus;
+import ru.practicum.mainservice.entity.enums.RequestStatus;
 import ru.practicum.mainservice.utils.DateTimeUtils;
 
 import javax.persistence.*;

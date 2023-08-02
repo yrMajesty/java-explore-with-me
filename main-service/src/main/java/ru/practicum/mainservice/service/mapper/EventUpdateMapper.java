@@ -6,7 +6,7 @@ import org.springframework.util.StringUtils;
 import ru.practicum.mainservice.dto.event.EventUpdateDto;
 import ru.practicum.mainservice.entity.Category;
 import ru.practicum.mainservice.entity.Event;
-import ru.practicum.mainservice.model.EventState;
+import ru.practicum.mainservice.entity.enums.EventState;
 import ru.practicum.mainservice.service.CategoryService;
 import ru.practicum.mainservice.utils.DateTimeUtils;
 

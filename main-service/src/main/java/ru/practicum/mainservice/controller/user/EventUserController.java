@@ -1,4 +1,4 @@
-package ru.practicum.mainservice.controller;
+package ru.practicum.mainservice.controller.user;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,7 +23,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/users")
 @RequiredArgsConstructor
-public class UserController {
+public class EventUserController {
     private final EventUserService eventService;
     private final RequestService requestService;
 
@@ -31,7 +31,7 @@ public class UserController {
     @ResponseStatus(HttpStatus.CREATED)
     public EventFullDto createEvent(@PathVariable(name = "userId") @Positive Long userId,
                                     @RequestBody @Valid EventNewDto request) {
-        log.info("EventUserController: Request to create event {} from user with id='{}'", request, userId);
+        log.info("Request to create event {} from user with id='{}'", request, userId);
         return eventService.createEvent(request, userId);
     }
 
@@ -39,7 +39,7 @@ public class UserController {
     public List<EventShortDto> getEvents(@PathVariable(name = "userId") @Positive Long userId,
                                          @RequestParam(name = "from", defaultValue = "0") @PositiveOrZero Integer from,
                                          @RequestParam(name = "size", defaultValue = "10") @Positive Integer size) {
-        log.info("EventUserController: Request to get events by userId from user with id='{}'", userId);
+        log.info("Request to get events by userId from user with id='{}'", userId);
         return eventService.getEventsByUserId(userId, from, size);
     }
 
@@ -47,8 +47,7 @@ public class UserController {
     @GetMapping("/{userId}/events/{eventId}")
     public EventFullDto getEventByUserAndEvent(@PathVariable(name = "userId") @Positive Long userId,
                                                @PathVariable(name = "eventId") @Positive Long eventId) {
-        log.info("EventUserController: Request to get event by userId='{}' and eventId='{}' from user with id='{}'",
-                userId, eventId, userId);
+        log.info("Request to get event by userId='{}' and eventId='{}' from user with id='{}'", userId, eventId, userId);
         return eventService.getEventByUserIdAndEventId(userId, eventId);
     }
 
@@ -56,7 +55,7 @@ public class UserController {
     public EventFullDto updateEventByOwner(@PathVariable(name = "userId") @Positive Long userId,
                                            @PathVariable(name = "eventId") @Positive Long eventId,
                                            @RequestBody @Valid EventUpdateDto request) {
-        log.info("EventUserController: Request to update event  with id='{}' from user with id='{}', request={}",
+        log.info(" Request to update event  with id='{}' from user with id='{}', request={}",
                 eventId, userId, request);
         return eventService.updateEventByIdAndUserId(eventId, userId, request);
     }
@@ -64,8 +63,7 @@ public class UserController {
     @GetMapping("/{userId}/events/{eventId}/requests")
     public List<RequestDto> getRequestByEvent(@PathVariable(name = "userId") Long userId,
                                               @PathVariable(name = "eventId") Long eventId) {
-        log.info("EventUserController: Request to get requests by eventId='{}' from user with id='{}'",
-                eventId, userId);
+        log.info("Request to get requests by eventId='{}' from user with id='{}'", eventId, userId);
         return requestService.getRequestsByEventId(userId, eventId);
     }
 
@@ -73,31 +71,7 @@ public class UserController {
     public RequestStatusUpdateResponse updateStatusRequest(@PathVariable(name = "userId") @Positive Long userId,
                                                            @PathVariable(name = "eventId") @Positive Long eventId,
                                                            @RequestBody RequestStatusUpdateRequest request) {
-        log.info("EventUserController: Request to update status event with id='{}' from user with id='{}'",
-                eventId, userId);
+        log.info("Request to update status event with id='{}' from user with id='{}'", eventId, userId);
         return eventService.updateStatusRequestByEventId(userId, eventId, request);
-    }
-
-    @PostMapping("/{userId}/requests")
-    @ResponseStatus(HttpStatus.CREATED)
-    public RequestDto createRequest(@PathVariable Long userId,
-                                    @RequestParam Long eventId) {
-        log.info("RequestUserController: Request to create request for participation in event with id={} " +
-                "by user with id={}", eventId, userId);
-        return requestService.createRequest(userId, eventId);
-    }
-
-    @GetMapping("/{userId}/requests")
-    public List<RequestDto> getAllRequests(@PathVariable(name = "userId") Long userId) {
-        log.info("RequestUserController: Request to get all request by user with id={}", userId);
-        return requestService.getAllUserRequestsByUserId(userId);
-    }
-
-    @PatchMapping("/{userId}/requests/{requestId}/cancel")
-    public RequestDto cancelRequest(@PathVariable(name = "userId") Long userId,
-                                    @PathVariable(name = "requestId") Long requestId) {
-        log.info("RequestUserController:Request to cancel request for participation with id={} in event " +
-                "by user with id={}", requestId, userId);
-        return requestService.cancelRequestById(userId, requestId);
     }
 }

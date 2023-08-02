@@ -6,6 +6,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
+import ru.practicum.mainservice.dto.event.EventSearchDto;
 import ru.practicum.statsdto.HitDto;
 import ru.practicum.statsdto.ViewStatsDto;
 import ru.practicum.client.StatClient;
@@ -14,7 +15,7 @@ import ru.practicum.mainservice.dto.event.EventShortDto;
 import ru.practicum.mainservice.entity.Event;
 import ru.practicum.mainservice.exception.EventParametersException;
 import ru.practicum.mainservice.exception.NoFoundObjectException;
-import ru.practicum.mainservice.model.EventState;
+import ru.practicum.mainservice.entity.enums.EventState;
 import ru.practicum.mainservice.repository.EventRepository;
 import ru.practicum.mainservice.service.mapper.EventMapper;
 import ru.practicum.mainservice.utils.DateTimeUtils;
@@ -31,15 +32,13 @@ public class EventPublicService {
     private final StatClient statClient;
     private final EventMapper eventMapper;
 
-    public List<EventShortDto> getAllEvents(String text, List<Long> categories, Boolean paid,
-                                            LocalDateTime startDate, LocalDateTime endDate, Boolean onlyAvailable,
-                                            Integer from, Integer size, String ip, String uri) {
-        DateTimeUtils.checkEndIsAfterStart(startDate, endDate);
+    public List<EventShortDto> getAllEvents(EventSearchDto request, String ip, String uri) {
+        DateTimeUtils.checkEndIsAfterStart(request.getRangeStart(), request.getRangeEnd());
         saveInfoToStatistics(ip, uri);
 
-        Pageable pageable = PageRequest.of(from / size, size);
-        Specification<Event> specification = createRequestForGetEvents(text, categories, paid, startDate,
-                endDate, onlyAvailable);
+        Pageable pageable = PageRequest.of(request.getFrom() / request.getSize(), request.getSize());
+        Specification<Event> specification = createRequestForGetEvents(request.getText(), request.getCategories(),
+                request.getPaid(), request.getRangeStart(), request.getRangeEnd(), request.getOnlyAvailable());
 
         List<Event> events = eventRepository.findAll(specification, pageable);
         updateViewsOfEvents(events);

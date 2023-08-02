@@ -6,7 +6,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import ru.practicum.mainservice.dto.compilation.CompilationDto;
 import ru.practicum.mainservice.dto.compilation.CompilationNewDto;
-import ru.practicum.mainservice.dto.compilation.CompilationUpdateRequest;
+import ru.practicum.mainservice.dto.compilation.CompilationUpdateDto;
 import ru.practicum.mainservice.entity.Compilation;
 import ru.practicum.mainservice.entity.Event;
 import ru.practicum.mainservice.exception.NoFoundObjectException;
@@ -27,7 +27,7 @@ public class CompilationService {
     @Transactional
     public CompilationDto createCompilation(CompilationNewDto request) {
         Compilation compilation = compilationMapper.fromDto(request);
-        if (!Objects.nonNull(request.getPinned())) {
+        if (Objects.isNull(request.getPinned())) {
             compilation.setPinned(false);
         }
 
@@ -41,7 +41,7 @@ public class CompilationService {
     }
 
     @Transactional
-    public CompilationDto updateCompilationById(Long compilationId, CompilationUpdateRequest request) {
+    public CompilationDto updateCompilationById(Long compilationId, CompilationUpdateDto request) {
         Compilation compilation = getCompilationByIdIfExist(compilationId);
 
         if (Objects.nonNull(request.getTitle())) {
