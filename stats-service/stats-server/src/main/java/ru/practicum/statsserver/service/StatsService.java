@@ -2,8 +2,8 @@ package ru.practicum.statsserver.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import ru.practicum.HitDto;
-import ru.practicum.ViewStatsDto;
+import ru.practicum.statsdto.HitDto;
+import ru.practicum.statsdto.ViewStatsDto;
 import ru.practicum.statsserver.exception.NoValidParameterRequest;
 import ru.practicum.statsserver.model.ItemStats;
 import ru.practicum.statsserver.repository.StatsRepository;

@@ -15,21 +15,21 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "stats")
 public class ItemStats {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
     private Long id;
 
-    @Column(name = "app")
+    @Column(name = "app", nullable = false)
     private String app;
 
-    @Column(name = "uri")
+    @Column(name = "uri", nullable = false)
     private String uri;
 
-    @Column(name = "ip")
+    @Column(name = "ip", nullable = false, length = 32)
     private String ip;
 
-    @Column(name = "request_date_time")
+    @Column(name = "request_date_time", nullable = false)
     private LocalDateTime requestDateTime;
 
 }

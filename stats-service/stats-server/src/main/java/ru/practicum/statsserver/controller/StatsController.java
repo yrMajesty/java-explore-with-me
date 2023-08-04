@@ -5,8 +5,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.HitDto;
-import ru.practicum.ViewStatsDto;
+import ru.practicum.statsdto.HitDto;
+import ru.practicum.statsdto.ViewStatsDto;
 import ru.practicum.statsserver.service.StatsService;
 
 import java.time.LocalDateTime;
