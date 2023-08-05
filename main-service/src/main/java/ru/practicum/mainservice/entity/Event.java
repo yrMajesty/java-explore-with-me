@@ -46,6 +46,7 @@ public class Event {
     @Column(name = "published_on")
     private LocalDateTime publishedOn;
 
+    @Builder.Default
     @Column(name = "request_moderation")
     private Boolean requestModeration = true;
 
@@ -53,6 +54,7 @@ public class Event {
     @Column(name = "state", length = 10)
     private EventState state;
 
+    @Builder.Default
     @Column(name = "views")
     private Integer views = 0;
 
@@ -67,4 +69,7 @@ public class Event {
     @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "location_id", referencedColumnName = "id")
     private Location location;
+
+    @Builder.Default
+    private Double rating = 0.0;
 }

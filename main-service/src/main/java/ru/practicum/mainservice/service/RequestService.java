@@ -6,11 +6,12 @@ import ru.practicum.mainservice.dto.request.RequestDto;
 import ru.practicum.mainservice.entity.Event;
 import ru.practicum.mainservice.entity.Request;
 import ru.practicum.mainservice.entity.User;
+import ru.practicum.mainservice.entity.enums.EventState;
+import ru.practicum.mainservice.entity.enums.RequestStatus;
+import ru.practicum.mainservice.exception.AccessException;
 import ru.practicum.mainservice.exception.EventParametersException;
 import ru.practicum.mainservice.exception.InvalidRequestException;
 import ru.practicum.mainservice.exception.NoFoundObjectException;
-import ru.practicum.mainservice.entity.enums.EventState;
-import ru.practicum.mainservice.entity.enums.RequestStatus;
 import ru.practicum.mainservice.repository.RequestRepository;
 import ru.practicum.mainservice.service.mapper.RequestMapper;
 
@@ -103,7 +104,7 @@ public class RequestService {
     public List<RequestDto> getRequestsByEventId(Long userId, Long eventId) {
         userService.checkExistUserById(userId);
 
-        eventService.isUserInitiatorEvent(eventId, userId);
+        eventService.checkUserInitiatorEvent(eventId, userId);
 
         List<Request> requests = requestRepository.findAllByEventId(eventId);
         return requestMapper.toDtos(requests);
@@ -116,6 +117,18 @@ public class RequestService {
     private void checkNotExistRequestByUserIdAndEventId(Long userId, Long eventId) {
         if (!requestRepository.findByRequesterIdAndEventId(userId, eventId).isEmpty()) {
             throw new EventParametersException("Request already was created");
+        }
+    }
+
+    public void checkUserIsConfirmedParticipantEvent(Long userId, Long eventId) {
+        Request request = requestRepository.findByEventIdAndRequesterId(eventId, userId)
+                .orElseThrow(() -> new AccessException(
+                        String.format("User with id='%s' is not participant of event with id='%s'", userId, eventId)));
+
+        if (!Objects.equals(request.getStatus(), RequestStatus.CONFIRMED)) {
+            throw new AccessException(
+                    String.format("Participation of user with id='%s' of event with id='%s' has not been confirmed",
+                            userId, eventId));
         }
     }
 }

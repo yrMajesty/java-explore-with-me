@@ -9,6 +9,7 @@ import ru.practicum.mainservice.dto.event.EventFullDto;
 import ru.practicum.mainservice.dto.event.EventNewDto;
 import ru.practicum.mainservice.dto.event.EventShortDto;
 import ru.practicum.mainservice.dto.event.EventUpdateDto;
+import ru.practicum.mainservice.dto.event.enums.EventSortType;
 import ru.practicum.mainservice.dto.request.RequestDto;
 import ru.practicum.mainservice.dto.request.RequestStatusUpdateRequest;
 import ru.practicum.mainservice.dto.request.RequestStatusUpdateResponse;
@@ -55,8 +56,9 @@ public class EventUserService {
         return eventMapper.toFullDto(savedEvent);
     }
 
-    public List<EventShortDto> getEventsByUserId(Long userId, Integer from, Integer size) {
-        Pageable pageable = PageRequest.of(from / size, size, Sort.by(Sort.Direction.ASC, "id"));
+    public List<EventShortDto> getEventsByUserId(Long userId, Integer from, Integer size, EventSortType sortBy, Sort.Direction direction) {
+        Pageable pageable = PageRequest.of(from / size, size,
+                Sort.by(direction, sortBy.toString().toLowerCase()));
         userService.checkExistUserById(userId);
 
         List<Event> events = eventRepository.findAllByInitiatorId(userId, pageable);

@@ -133,4 +133,17 @@ public class ErrorHandler {
                 .timestamp(LocalDateTime.now().format(DateTimeUtils.DATE_TIME_FORMATTER))
                 .build();
     }
+
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    @ExceptionHandler(value = AccessException.class)
+    public ErrorResponse handlerAccessException(AccessException e) {
+        log.error("Error AccessException {}", e.getMessage());
+
+        return ErrorResponse.builder()
+                .status(HttpStatus.FORBIDDEN.name())
+                .reason("No rights to perform the operation")
+                .message(e.getMessage())
+                .timestamp(LocalDateTime.now().format(DateTimeUtils.DATE_TIME_FORMATTER))
+                .build();
+    }
 }

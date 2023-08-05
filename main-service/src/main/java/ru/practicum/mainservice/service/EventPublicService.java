@@ -3,23 +3,25 @@ package ru.practicum.mainservice.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
-import ru.practicum.mainservice.dto.event.EventSearchDto;
-import ru.practicum.statsdto.HitDto;
-import ru.practicum.statsdto.ViewStatsDto;
 import ru.practicum.client.StatClient;
 import ru.practicum.mainservice.dto.event.EventFullDto;
+import ru.practicum.mainservice.dto.event.EventSearchDto;
 import ru.practicum.mainservice.dto.event.EventShortDto;
 import ru.practicum.mainservice.entity.Event;
+import ru.practicum.mainservice.entity.enums.EventState;
 import ru.practicum.mainservice.exception.EventParametersException;
 import ru.practicum.mainservice.exception.NoFoundObjectException;
-import ru.practicum.mainservice.entity.enums.EventState;
 import ru.practicum.mainservice.repository.EventRepository;
 import ru.practicum.mainservice.service.mapper.EventMapper;
 import ru.practicum.mainservice.utils.DateTimeUtils;
+import ru.practicum.statsdto.HitDto;
+import ru.practicum.statsdto.ViewStatsDto;
 
+import javax.transaction.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
@@ -36,7 +38,9 @@ public class EventPublicService {
         DateTimeUtils.checkEndIsAfterStart(request.getRangeStart(), request.getRangeEnd());
         saveInfoToStatistics(ip, uri);
 
-        Pageable pageable = PageRequest.of(request.getFrom() / request.getSize(), request.getSize());
+        Pageable pageable = PageRequest.of(request.getFrom() / request.getSize(), request.getSize(),
+                Sort.by(request.getDirection(), request.getSortBy().toString().toLowerCase()));
+
         Specification<Event> specification = createRequestForGetEvents(request.getText(), request.getCategories(),
                 request.getPaid(), request.getRangeStart(), request.getRangeEnd(), request.getOnlyAvailable());
 
@@ -44,6 +48,11 @@ public class EventPublicService {
         updateViewsOfEvents(events);
 
         return eventMapper.toShortDtos(events);
+    }
+
+    public Event getEventById(Long eventId) {
+        return eventRepository.findById(eventId)
+                .orElseThrow(() -> new NoFoundObjectException(String.format("Event with id='%s' not found", eventId)));
     }
 
     public EventFullDto getEventById(Long eventId, String ip, String uri) {
@@ -152,10 +161,15 @@ public class EventPublicService {
                 new NoFoundObjectException(String.format("Event with id='%s' not found", eventId)));
     }
 
-    public void isUserInitiatorEvent(Long eventId, Long userId) {
+    public void checkUserInitiatorEvent(Long eventId, Long userId) {
         if (!eventRepository.existsByIdAndInitiatorId(eventId, userId)) {
             throw new EventParametersException(String.format("User with id='%s' is not initiator of event with id='%s'",
                     userId, eventId));
         }
+    }
+
+    @Transactional
+    public void updateRatingById(Long eventId, double newRating) {
+        eventRepository.updateRatingById(eventId, newRating);
     }
 }

@@ -34,7 +34,7 @@ public class EventAdminService {
         DateTimeUtils.checkEndIsAfterStart(request.getRangeStart(), request.getRangeEnd());
 
         Pageable pageable = PageRequest.of(request.getFrom() / request.getSize(), request.getSize(),
-                Sort.by(Sort.Direction.ASC, "id"));
+                Sort.by(request.getDirection(), request.getSortBy().toString().toLowerCase()));
 
         Specification<Event> specification = createRequestForGetEvents(request.getUsers(), request.getStates(),
                 request.getCategories(), request.getRangeStart(), request.getRangeEnd());
