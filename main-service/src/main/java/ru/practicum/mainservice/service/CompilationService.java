@@ -21,7 +21,7 @@ import java.util.Objects;
 @RequiredArgsConstructor
 public class CompilationService {
     private final CompilationRepository compilationRepository;
-    private final EventPublicService eventService;
+    private final EventService eventService;
     private final CompilationMapper compilationMapper;
 
     @Transactional
@@ -32,8 +32,8 @@ public class CompilationService {
         }
 
         if (Objects.nonNull(request.getEvents())) {
-            List<Event> getEvent = eventService.getEventsByIdIn(request.getEvents());
-            compilation.setEvents(getEvent);
+            List<Event> foundEvent = eventService.getEventsByIdIn(request.getEvents());
+            compilation.setEvents(foundEvent);
         }
 
         Compilation savedCompilation = compilationRepository.save(compilation);

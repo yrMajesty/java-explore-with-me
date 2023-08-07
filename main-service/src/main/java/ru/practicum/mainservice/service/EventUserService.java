@@ -17,10 +17,10 @@ import ru.practicum.mainservice.entity.Category;
 import ru.practicum.mainservice.entity.Event;
 import ru.practicum.mainservice.entity.Request;
 import ru.practicum.mainservice.entity.User;
-import ru.practicum.mainservice.exception.EventParametersException;
-import ru.practicum.mainservice.exception.NoFoundObjectException;
 import ru.practicum.mainservice.entity.enums.EventState;
 import ru.practicum.mainservice.entity.enums.RequestStatus;
+import ru.practicum.mainservice.exception.EventParametersException;
+import ru.practicum.mainservice.exception.NoFoundObjectException;
 import ru.practicum.mainservice.repository.EventRepository;
 import ru.practicum.mainservice.service.mapper.EventMapper;
 import ru.practicum.mainservice.service.mapper.EventUpdateMapper;
@@ -30,7 +30,9 @@ import ru.practicum.mainservice.utils.DateTimeUtils;
 import javax.transaction.Transactional;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -42,6 +44,7 @@ public class EventUserService {
     private final EventMapper eventMapper;
     private final EventUpdateMapper eventUpdateMapper;
     private final RequestMapper requestMapper;
+    private final EstimationService estimationService;
 
     @Transactional
     public EventFullDto createEvent(EventNewDto request, Long userId) {
@@ -53,23 +56,50 @@ public class EventUserService {
         Event event = eventMapper.fromDto(request, category, user);
         Event savedEvent = eventRepository.save(event);
 
-        return eventMapper.toFullDto(savedEvent);
+        EventFullDto eventDto = eventMapper.toFullDto(savedEvent);
+        Double rating = estimationService.getRatingByEventId(event.getId());
+        eventDto.setRating(rating);
+
+        return eventDto;
     }
 
-    public List<EventShortDto> getEventsByUserId(Long userId, Integer from, Integer size, EventSortType sortBy, Sort.Direction direction) {
-        Pageable pageable = PageRequest.of(from / size, size,
-                Sort.by(direction, sortBy.toString().toLowerCase()));
+    public List<EventShortDto> getEventsByUserId(Long userId, Integer from, Integer size,
+                                                 EventSortType sortBy, Sort.Direction direction) {
         userService.checkExistUserById(userId);
 
+        Pageable pageable;
+        if (Objects.equals(sortBy, EventSortType.RATING)) {
+            pageable = PageRequest.of(from / size, size);
+        } else {
+            pageable = PageRequest.of(from / size, size, Sort.by(direction, sortBy.toString().toLowerCase()));
+        }
+
         List<Event> events = eventRepository.findAllByInitiatorId(userId, pageable);
-        return eventMapper.toShortDtos(events);
+        List<EventShortDto> eventShortDtos = eventMapper.toShortDtos(events);
+
+        Map<Long, Double> ratings = estimationService.getRatingsForEvents(events.stream()
+                .map(Event::getId)
+                .collect(Collectors.toList()));
+
+        eventShortDtos.forEach(eventFullDto -> eventFullDto.setRating(
+                ratings.get(
+                        eventFullDto.getId()) == null
+                        ? 0.0
+                        : ratings.get(eventFullDto.getId())));
+
+        return eventShortDtos;
     }
 
     public EventFullDto getEventByUserIdAndEventId(Long userId, Long eventId) {
         userService.checkExistUserById(userId);
 
         Event event = getEventByIdAndInitiatorIdIfExist(eventId, userId);
-        return eventMapper.toFullDto(event);
+        EventFullDto eventDto = eventMapper.toFullDto(event);
+
+        Double rating = estimationService.getRatingByEventId(eventId);
+        eventDto.setRating(rating);
+
+        return eventDto;
     }
 
     public EventFullDto updateEventByIdAndUserId(Long eventId, Long userId, EventUpdateDto request) {
@@ -90,7 +120,12 @@ public class EventUserService {
         eventUpdateMapper.updateEvent(foundEvent, request, false);
 
         Event updatedEvent = eventRepository.save(foundEvent);
-        return eventMapper.toFullDto(updatedEvent);
+        EventFullDto eventDto = eventMapper.toFullDto(updatedEvent);
+
+        Double rating = estimationService.getRatingByEventId(eventId);
+        eventDto.setRating(rating);
+
+        return eventDto;
     }
 
     @Transactional

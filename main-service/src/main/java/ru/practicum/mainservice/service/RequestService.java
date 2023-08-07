@@ -26,7 +26,7 @@ import java.util.Set;
 public class RequestService {
     private final RequestRepository requestRepository;
     private final UserService userService;
-    private final EventPublicService eventService;
+    private final EventService eventService;
     private final RequestMapper requestMapper;
 
     @Transactional

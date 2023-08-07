@@ -69,7 +69,4 @@ public class Event {
     @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "location_id", referencedColumnName = "id")
     private Location location;
-
-    @Builder.Default
-    private Double rating = 0.0;
 }

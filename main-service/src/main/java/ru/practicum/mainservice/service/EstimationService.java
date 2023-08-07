@@ -2,6 +2,7 @@ package ru.practicum.mainservice.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import ru.practicum.mainservice.dto.db.EventMarkRequestResult;
 import ru.practicum.mainservice.entity.Estimation;
 import ru.practicum.mainservice.entity.Event;
 import ru.practicum.mainservice.exception.AccessException;
@@ -10,28 +11,26 @@ import ru.practicum.mainservice.repository.EstimationRepository;
 
 import javax.transaction.Transactional;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class EstimationService {
     private final EstimationRepository estimationRepository;
-    private final EventPublicService eventPublicService;
+    private final EventService eventService;
     private final RequestService requestService;
     private final UserService userService;
 
     @Transactional
     public void addEventMark(Long userId, Long eventId, Byte mark) {
-        Event event = eventPublicService.getEventById(eventId);
+        Event event = eventService.getEventIfExistById(eventId);
 
         if (Objects.equals(userId, event.getInitiator().getId())) {
             throw new AccessException(String.format("User with id='%s' is initiator of event with id='%s'. " +
                     "Initiator cannot rate the event", userId, eventId));
         }
-
-//        if (event.getEventDate().isAfter(LocalDateTime.now())) {
-//            throw new AccessException("You cannot rate the event that has not yet passed");
-//        }
 
         userService.getUserByIdIfExist(userId);
         requestService.checkUserIsConfirmedParticipantEvent(userId, eventId);
@@ -41,18 +40,6 @@ public class EstimationService {
                 .userId(userId)
                 .mark(mark)
                 .build();
-
-        List<Estimation> allMarks = getAllMarkByEventId(eventId);
-        allMarks.add(estimation);
-
-        double newRating = allMarks
-                .stream()
-                .map(Estimation::getMark)
-                .mapToInt(Byte::intValue)
-                .average()
-                .orElse(0.0);
-
-        event.setRating(newRating);
 
         estimationRepository.save(estimation);
     }
@@ -65,18 +52,18 @@ public class EstimationService {
         }
 
         estimationRepository.deleteByUserIdAndEventId(userId, eventId);
-
-        double newRating = getAllMarkByEventId(eventId).stream()
-                .map(Estimation::getMark)
-                .mapToInt(Byte::intValue)
-                .average()
-                .orElse(0.0);
-
-        eventPublicService.updateRatingById(eventId, newRating);
     }
 
-    public List<Estimation> getAllMarkByEventId(Long eventId) {
-        return estimationRepository.findAllMarkByEventId(eventId);
+    public Double getRatingByEventId(Long id) {
+        return estimationRepository.getRatingByEventId(id).orElse(0.0);
     }
 
+    public Map<Long, Double> getRatingsForEvents(List<Long> ids) {
+        return estimationRepository.findAvgMarkByEventIdIn(ids)
+                .stream()
+                .collect(Collectors.toMap(
+                        EventMarkRequestResult::getEventId,
+                        EventMarkRequestResult::getMark
+                ));
+    }
 }

@@ -4,8 +4,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import ru.practicum.mainservice.dto.ResponseDto;
 import ru.practicum.mainservice.dto.event.EventFullDto;
 import ru.practicum.mainservice.dto.event.EventNewDto;
 import ru.practicum.mainservice.dto.event.EventShortDto;
@@ -24,7 +24,6 @@ import javax.validation.constraints.Min;
 import javax.validation.constraints.Positive;
 import javax.validation.constraints.PositiveOrZero;
 import java.util.List;
-import java.util.Map;
 
 @Slf4j
 @RestController
@@ -85,25 +84,19 @@ public class EventUserController {
     }
 
     @PostMapping("/{userId}/events/{eventId}/rating")
-    public ResponseEntity<Object> rateEvent(@PathVariable(name = "userId") @Positive Long userId,
-                                            @PathVariable(name = "eventId") @Positive Long eventId,
-                                            @RequestParam(name = "mark") @Min(0) @Max(10) Byte mark) {
+    public ResponseDto rateEvent(@PathVariable(name = "userId") @Positive Long userId,
+                                 @PathVariable(name = "eventId") @Positive Long eventId,
+                                 @RequestParam(name = "mark") @Min(0) @Max(10) Byte mark) {
         log.info("Request to add mark {} for event with id='{}' by user with id='{}'", mark, eventId, userId);
         estimationService.addEventMark(userId, eventId, mark);
-        return new ResponseEntity<>(
-                Map.of("message",
-                        String.format("User with id='%s' rated event with id='%s' a rating of %s", userId, eventId, mark)),
-                HttpStatus.OK);
+        return new ResponseDto(String.format("User with id='%s' rated event with id='%s' a rating of %s", userId, eventId, mark));
     }
 
     @DeleteMapping("/{userId}/events/{eventId}/rating")
-    public ResponseEntity<Object> deleteEventRating(@PathVariable(name = "userId") @Positive Long userId,
-                                                    @PathVariable(name = "eventId") @Positive Long eventId) {
+    public ResponseDto deleteEventRating(@PathVariable(name = "userId") @Positive Long userId,
+                                         @PathVariable(name = "eventId") @Positive Long eventId) {
         log.info("Delete mark for event with id='{}' by user with id='{}'", eventId, userId);
         estimationService.deleteEventMark(userId, eventId);
-        return new ResponseEntity<>(
-                Map.of("message",
-                        String.format("User with id='%s' deleted for event with id='%s'", userId, eventId)),
-                HttpStatus.OK);
+        return new ResponseDto(String.format("User with id='%s' deleted for event with id='%s'", userId, eventId));
     }
 }
