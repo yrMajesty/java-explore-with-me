@@ -37,8 +37,7 @@ CREATE TABLE IF NOT EXISTS events
     published_on       TIMESTAMP,
     request_moderation BOOLEAN DEFAULT TRUE,
     state              VARCHAR(10),
-    views              INTEGER DEFAULT 0,
-    rating             FLOAT DEFAULT 0
+    views              INTEGER DEFAULT 0
 );
 
 CREATE TABLE IF NOT EXISTS requests
