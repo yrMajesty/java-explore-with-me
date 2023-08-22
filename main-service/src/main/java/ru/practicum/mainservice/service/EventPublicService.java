@@ -3,25 +3,28 @@ package ru.practicum.mainservice.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
-import ru.practicum.mainservice.dto.event.EventSearchDto;
-import ru.practicum.statsdto.HitDto;
-import ru.practicum.statsdto.ViewStatsDto;
 import ru.practicum.client.StatClient;
 import ru.practicum.mainservice.dto.event.EventFullDto;
+import ru.practicum.mainservice.dto.event.EventSearchDto;
 import ru.practicum.mainservice.dto.event.EventShortDto;
+import ru.practicum.mainservice.dto.event.enums.EventSortType;
 import ru.practicum.mainservice.entity.Event;
-import ru.practicum.mainservice.exception.EventParametersException;
-import ru.practicum.mainservice.exception.NoFoundObjectException;
 import ru.practicum.mainservice.entity.enums.EventState;
+import ru.practicum.mainservice.exception.NoFoundObjectException;
 import ru.practicum.mainservice.repository.EventRepository;
 import ru.practicum.mainservice.service.mapper.EventMapper;
 import ru.practicum.mainservice.utils.DateTimeUtils;
+import ru.practicum.statsdto.HitDto;
+import ru.practicum.statsdto.ViewStatsDto;
 
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -29,6 +32,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class EventPublicService {
     private final EventRepository eventRepository;
+    private final EstimationService estimationService;
     private final StatClient statClient;
     private final EventMapper eventMapper;
 
@@ -36,14 +40,16 @@ public class EventPublicService {
         DateTimeUtils.checkEndIsAfterStart(request.getRangeStart(), request.getRangeEnd());
         saveInfoToStatistics(ip, uri);
 
-        Pageable pageable = PageRequest.of(request.getFrom() / request.getSize(), request.getSize());
         Specification<Event> specification = createRequestForGetEvents(request.getText(), request.getCategories(),
                 request.getPaid(), request.getRangeStart(), request.getRangeEnd(), request.getOnlyAvailable());
 
-        List<Event> events = eventRepository.findAll(specification, pageable);
-        updateViewsOfEvents(events);
+        if (Objects.equals(request.getSortBy(), EventSortType.RATING)) {
+            return getEventsSortByRating(specification, request.getFrom(), request.getSize(), request.getDirection());
 
-        return eventMapper.toShortDtos(events);
+        }
+        return getEventsSortBy(specification,
+                Sort.by(request.getDirection(), request.getSortBy().toString().toLowerCase()),
+                request.getFrom(), request.getSize());
     }
 
     public EventFullDto getEventById(Long eventId, String ip, String uri) {
@@ -54,11 +60,54 @@ public class EventPublicService {
         saveInfoToStatistics(ip, uri);
         updateViewsOfEvents(List.of(event));
 
-        return eventMapper.toFullDto(event);
+        Double rating = estimationService.getRatingByEventId(eventId);
+
+        EventFullDto eventDto = eventMapper.toFullDto(event);
+        eventDto.setRating(rating);
+
+        return eventDto;
     }
 
-    public List<Event> getEventsByIdIn(List<Long> ids) {
-        return eventRepository.findAllByIdIn(ids);
+    private List<EventShortDto> getEventsSortByRating(Specification<Event> specification, Integer from, Integer size,
+                                                      Sort.Direction direction) {
+        Pageable pageable = PageRequest.of(from / size, size);
+
+        List<EventShortDto> eventDtos = getEventsBySpecification(specification, pageable);
+
+        if (Objects.equals(direction, Sort.Direction.ASC)) {
+            return eventDtos.stream()
+                    .sorted(Comparator.comparing(EventShortDto::getRating))
+                    .collect(Collectors.toList());
+        }
+        return eventDtos.stream()
+                .sorted((o1, o2) -> o2.getRating().compareTo(o1.getRating()))
+                .collect(Collectors.toList());
+    }
+
+    private List<EventShortDto> getEventsSortBy(Specification<Event> specification, Sort sort, Integer from, Integer size) {
+        Pageable pageable = PageRequest.of(from / size, size, sort);
+
+        return getEventsBySpecification(specification, pageable);
+    }
+
+    private List<EventShortDto> getEventsBySpecification(Specification<Event> specification, Pageable pageable) {
+        List<Event> events = eventRepository.findAll(specification, pageable);
+
+        List<EventShortDto> eventFullDtos = eventMapper.toShortDtos(events);
+
+        Map<Long, Double> ratings = estimationService.getRatingsForEvents(events.stream()
+                .map(Event::getId)
+                .collect(Collectors.toList()));
+
+        eventFullDtos.forEach(eventFullDto -> eventFullDto.setRating(
+                ratings.get(
+                        eventFullDto.getId()) == null
+                        ? 0.0
+                        : ratings.get(eventFullDto.getId())));
+
+        updateViewsOfEvents(events);
+
+        return eventFullDtos;
     }
 
     private Specification<Event> createRequestForGetEvents(String text, List<Long> categories,
@@ -145,17 +194,5 @@ public class EventPublicService {
                 LocalDateTime.now().plusYears(5).format(DateTimeUtils.DATE_TIME_FORMATTER),
                 uris,
                 true);
-    }
-
-    public Event getEventIfExistById(Long eventId) {
-        return eventRepository.findById(eventId).orElseThrow(() ->
-                new NoFoundObjectException(String.format("Event with id='%s' not found", eventId)));
-    }
-
-    public void isUserInitiatorEvent(Long eventId, Long userId) {
-        if (!eventRepository.existsByIdAndInitiatorId(eventId, userId)) {
-            throw new EventParametersException(String.format("User with id='%s' is not initiator of event with id='%s'",
-                    userId, eventId));
-        }
     }
 }

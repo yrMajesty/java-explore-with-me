@@ -1,7 +1,9 @@
 package ru.practicum.mainservice.dto.event;
 
 import lombok.*;
+import org.springframework.data.domain.Sort;
 import org.springframework.format.annotation.DateTimeFormat;
+import ru.practicum.mainservice.dto.event.enums.EventSortType;
 import ru.practicum.mainservice.utils.DateTimeUtils;
 
 import javax.validation.constraints.Positive;
@@ -39,4 +41,8 @@ public class EventSearchDto {
 
     @Positive
     private Integer size = 10;
+
+    private EventSortType sortBy = EventSortType.ID;
+
+    private Sort.Direction direction = Sort.Direction.ASC;
 }
